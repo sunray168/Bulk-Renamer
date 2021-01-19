@@ -1,0 +1,322 @@
+<!---BY RAYMOND SUN-->
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ray's File Renamer</title>
+    <!-- <link type="text/css" rel="stylesheet" href="styles.css" /> -->
+    <!-- <script src="rename_script.js"></script> -->
+    <style>
+    h2, p{
+        text-align: center;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+    /* p{
+        font-family: Arial, Helvetica, sans-serif;
+
+    } */
+
+    .container{
+        display: flex;
+        margin-left: 170px;
+        margin-right: 170px;
+        padding: 10px;
+    }  
+
+    input[type=text], select{
+        width: 90%;
+        padding: 12px 20px;
+        margin: 8px 0;
+        display: inline-block;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    input[type=button]{
+        display: block;
+        width: 30%;
+        background-color: #4CAF50;
+        color: white;
+        padding: 14px 20px;
+        margin: 8px 0;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 0 auto;
+    }
+
+    #renameForm{
+        border-radius: 5px;
+        background-color: #f2f2f2;
+        padding: 20px;
+        width: 70%;
+        margin: 0 auto;
+    }
+
+
+    textarea{
+        display: block;
+        margin: 0 auto;
+        width: 70%;
+        padding: 12px 20px;
+        box-sizing: border-box;
+        border: 2px solid #ccc;
+        border-radius: 4px;
+        background-color: #f8f8f8;
+        resize: none;
+        
+    }
+
+    #directoryView{
+        margin: auto;
+        padding: 10px;
+        max-width: 900px;
+        line-height: 1.5;
+        width: 600px; 
+        height:700px; 
+        border: 1px solid black; 
+        /* display:block;
+        margin: 0 auto; */
+    }
+    </style>
+    <script>
+        var fileCounter = 0;
+
+
+        var commandLineList = [""];
+        var newNameList = [""];
+        const inputElement = document.getElementById("input");
+        inputElement.addEventListener("change", handleFiles, false);
+
+        var selectedDirectory = '';
+
+        function getFormDetails(){
+            var elements = [];
+            var formElements =  document.getElementById("renameForm").elements;
+
+            for (i = 0; i < formElements.length; i++) {
+                if(formElements[i].type != 'button'){
+                    elements.push(formElements[i].value);
+                }
+            }
+            //console.log(elements);
+            return elements
+        }
+
+        //elements[0] = directory
+        //elements[3] = project name
+        //elements[4] = cpunterparty name
+        //elements[5] = doc description
+        //elements[6] = date
+        function createCommandLine(elements){   
+            var oldFileName = document.getElementById("Selected File").value;
+            oldFileName = '"' + oldFileName.replace("PDF", "pdf") + '"';
+            var newFileName = '"' + elements[3] + ' - ' + elements[5] + ' (' + elements[4] + ') - ' + elements[6] + '.pdf"';
+            newNameList.push(newFileName);
+            var commandLine = 'ren ' + oldFileName + ' ' + newFileName;  
+            console.log(commandLine);
+            commandLineList.push(commandLine);
+            console.log(commandLineList);
+        }
+
+        function runRenamer(){
+            //checkDescription();
+            var details = getFormDetails();
+            createCommandLine(details);
+            fileCounter++;
+            console.log('File Counter: ' + fileCounter)
+            next = selectNextFile(fileCounter);
+            if(!next){
+                alert("No files left to rename");
+                // produceOutput(commandLineList);
+            }
+            //fileCounter++
+            produceOutput(commandLineList)
+            resetFields();
+        }
+
+        function produceOutput(commandLine){
+            document.getElementById('output log').value = "";
+            log = 'c:\n' + 'cd "' + document.getElementById("Directory").value + '"\n';
+            for (i=1; i<commandLine.length; i++){
+                log += commandLine[i] + "\n"
+            }
+            document.getElementById('output log').value = log;
+
+            var a = newNameList;
+            checkDuplicateNames(a);
+
+        }
+
+        function downloadOutput(){
+            const text = document.getElementById("output log").value;
+            const date = new Date();
+            const filename = 'bulk_renamer_' + date + '.bat'
+            var element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+
+        function handleFiles() {
+            const fileList = this.files;
+            oldFileList = getUploadedFileNames();
+            noOfFiles = oldFileList.length;
+
+            console.log(noOfFiles);
+            if (checkCounter(noOfFiles) == true){
+                document.getElementById("Selected File").value = oldFileList[fileCounter].name;
+            }   
+        }
+
+        function getUploadedFileNames(){
+            files = document.getElementById("Upload Files").files;
+            return files
+        }
+
+        function resetFields(){
+            var formElements =  document.getElementById("renameForm").elements;
+
+            for (i = 5; i < formElements.length; i++) {
+                if(formElements[i].type != 'button'){
+                    formElements[i].value = "";
+                }
+            }
+        }
+
+
+        function selectNextFile(index){
+            oldFileList = getUploadedFileNames();
+            noOfFiles = oldFileList.length;
+
+            if(index < noOfFiles && noOfFiles >= 1) {
+                document.getElementById("Selected File").value = oldFileList[index].name;
+                nextDocument(oldFileList[index].name)
+                return true;
+            }
+            else{
+                document.getElementById("Selected File").value = "All files completed. Check the output log";
+                return false;
+            }
+        }
+
+        function resetCounter(){
+            fileCounter = 0;
+        }
+
+        function checkCounter(noOfFiles){
+            if (fileCounter >= noOfFiles-1){
+                resetCounter();
+                return false;
+            }
+            else{
+                return true
+            }
+        }
+
+        // function checkDescription(){
+        //     bannedChar = ["\/", "\\", ":", "*", "?", "<", ">", "|"];
+        //     let desc = document.getElementById('Document Description').value;
+        //     for (i=0; bannedChar.length; i++){
+        //         if (desc.indexOf(bannedChar[i]) != -1){
+        //             alert("New file description cannot contain / \ : * ? < > |");
+        //             break;
+        //         }
+        //     }
+        // }
+
+        function checkDuplicateNames(a){
+            var counts = [];
+                for(var i = 0; i <= a.length; i++) {
+                    if(counts[a[i]] === undefined) {
+                        counts[a[i]] = 1;
+                    } else {
+                        alert("There are duplicate new file names");
+                        return true;
+                    }
+                }
+                return false;
+        }
+
+
+
+        function displayDocument(){
+            let directoryName = document.getElementById('Directory').value;
+            directoryName.replace('\\','\\\\')
+            let fullPath = directoryName
+            selectedDirectory = fullPath
+            console.log('fullPath: ' + fullPath)
+            
+            
+            let viewDoc =document.getElementById("srcLink");
+            let clone= viewDoc.cloneNode(true);
+            clone.setAttribute('src', fullPath);
+            viewDoc.parentNode.replaceChild(clone,viewDoc)
+            console.log(document.getElementById('srcLink').src)
+        }
+
+        function nextDocument(file){
+            let viewDoc = document.getElementById("srcLink");
+            // let nextFile = viewDoc.src + `\\\\${file}`
+            let nextFile = selectedDirectory + `\\\\${file}`
+            console.log('next File: ' + nextFile)
+            let clone= viewDoc.cloneNode(true);
+            clone.setAttribute('src', nextFile);
+            viewDoc.parentNode.replaceChild(clone,viewDoc)
+            console.log(document.getElementById('srcLink').src)
+        }
+    </script>
+
+
+</head>
+
+
+<body>
+    <h2>Ray Sun's Bulk Renamer</h2>
+    <div class='container'>
+    <div id="directoryView">
+        <div id="pdfViewer">
+            <embed id='srcLink' src= "" width= "600" height= "700">
+        </div> 
+    </div>
+
+    <div id = "renamerForm">
+    
+    <div class="form">
+        <form id="renameForm">
+            <p>Directory:</p>
+            <input type="text" id="Directory" size="90" value="">
+            <input type="button" value="VIEW" onclick="displayDocument()"><br>
+            
+            <input type="file" id="Upload Files" multiple onchange="handleFiles(this.files); resetCounter(); selectNextFile(0)"><br>
+            <!-- <input type="text" id="Project Name" size="50" value=""><br> -->
+            <br><p>Selected File:</p>
+            <input type="text" id="Selected File" size="90" value=""><br>
+            <p>Project Name:</p>
+            <input type="text" id="Project Name" size="50" value="Project Goldeneye"><br>
+            <p>Counterparty name:</p>
+            <input type="text" id="Counterparty Name" size="50" value=""><br>
+            <p>Document Description:</p>
+            <input type="text" id="Document Description" size="50" value=""><br>
+            <p>Date:</p>
+            <input type="text" id="Date" value=""><br>
+            <input type="button" value="NEXT" onclick="runRenamer()">
+        </form>
+    </div>
+</div>
+</div>
+    <br><h2>Output (copy me and save into a batch file)</h2>
+    <textarea value="" id="output log" rows="50" cols="150"></textarea><br>
+    <br>
+    <input type="button" id="download button" value="DOWNLOAD" onclick="downloadOutput()">
+    </div>
+</body>
+
+
+</html>
