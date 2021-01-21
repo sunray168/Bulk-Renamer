@@ -108,13 +108,19 @@
 
         //elements[0] = directory
         //elements[3] = project name
-        //elements[4] = cpunterparty name
-        //elements[5] = doc description
-        //elements[6] = date
+        //elements[4] = doc description
+        //elements[5] = date
+        //elements[6] = counterparty name
         function createCommandLine(elements){   
             var oldFileName = document.getElementById("Selected File").value;
             oldFileName = '"' + oldFileName.replace("PDF", "pdf") + '"';
-            var newFileName = '"' + elements[3] + ' - ' + elements[5] + ' (' + elements[4] + ') - ' + elements[6] + '.pdf"';
+            var newFileName = ''
+            if (elements[6] != ''){
+                var newFileName = '"' + elements[3] + ' - ' + elements[4] + ' (' + elements[6] + ') - ' + elements[5] + '.pdf"';
+            }
+            else{
+                var newFileName = '"' + elements[3] + ' - ' + elements[4] + ' - ' + elements[5] + '.pdf"';   
+            }
             newNameList.push(newFileName);
             var commandLine = 'ren ' + oldFileName + ' ' + newFileName;  
             console.log(commandLine);
@@ -293,20 +299,20 @@
             <p>Directory:</p>
             <input type="text" id="Directory" size="90" value="">
             <input type="button" value="VIEW" onclick="displayDocument()"><br>
-            
+            <br>
             <input type="file" id="Upload Files" multiple onchange="handleFiles(this.files); resetCounter(); selectNextFile(0)"><br>
             <!-- <input type="text" id="Project Name" size="50" value=""><br> -->
             <br><p>Selected File:</p>
             <input type="text" id="Selected File" size="90" value=""><br>
-            <p>Project Name:</p>
-            <input type="text" id="Project Name" size="50" value="Project Goldeneye"><br>
-            <p>Counterparty name:</p>
-            <input type="text" id="Counterparty Name" size="50" value=""><br>
-            <p>Document Description:</p>
+            <p>Matter Name (required):</p>
+            <input type="text" id="Project Name" size="50" value=""><br>
+            <p>Document Description (required):</p>
             <input type="text" id="Document Description" size="50" value=""><br>
-            <p>Date:</p>
-            <input type="text" id="Date" value=""><br>
-            <input type="button" value="NEXT" onclick="runRenamer()">
+            <p>Date (required):</p>
+            <input type="text" id="Date (required)" value=""><br>
+            <p>Counterparty name (optional):</p>
+            <input type="text" id="Counterparty Name" size="50" value=""><br>
+            <input type="button" value="NEXT" onclick="runRenamer()"><br>
         </form>
     </div>
 </div>
